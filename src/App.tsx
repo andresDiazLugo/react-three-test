@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Canvas, useFrame } from '@react-three/fiber'
 import './App.css'
 import { useRef, useState } from 'react'
 import * as THREE from 'three'
+import { MeshWobbleMaterial, OrbitControls, useHelper } from '@react-three/drei'
+import { useControls } from 'leva'
 
 interface Props{
   position: [number, number, number]
@@ -26,11 +29,14 @@ interface Props{
 // }
 const Sphere = ({ position, size }:Props) => {
   const ref = useRef<THREE.Mesh>(null)
-  const [isHovered, setIsHovered] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isHovered, _setIsHovered] = useState(false)
+  // const [isCliked, _setIsClicked] = useState(false)
 
   useFrame((_state, delta) => {
+    const speed = isHovered ? 1 : 0.2
     if (ref.current) {
-      ref.current.rotation.y += delta
+      ref.current.rotation.y += delta + speed
     }
   })
 
@@ -39,14 +45,17 @@ const Sphere = ({ position, size }:Props) => {
     <mesh
     position={position}
     ref={ref}
-    onPointerEnter={(event) => {
-      event.stopPropagation()
-      setIsHovered(true)
-    }}
-    onPointerLeave={() => setIsHovered(false)}
+    // onPointerEnter={(event) => {
+    //   event.stopPropagation()
+    //   setIsHovered(true)
+    // }}
+    // onPointerLeave={() => setIsHovered(false)}
+    // onClick={()=> setIsClicked(!isCliked)}
+    // scale={isCliked ? 2 : 1}
   >
     <sphereGeometry args={size} />
-    <meshStandardMaterial color={isHovered ? 'orange' : 'blue'} wireframe />
+    <MeshWobbleMaterial factor={0.1} color={'orange'} speed={10} wireframe />
+    {/* <meshStandardMaterial color={isHovered ? 'orange' : 'blue'} wireframe /> */}
   </mesh>
   )
 }
@@ -79,12 +88,24 @@ const Sphere = ({ position, size }:Props) => {
 //   )
 // }
 
-function App() {
+export const Scene = ()=>{
+  const  directionLightRef = useRef()
+  // @ts-ignore
+  useHelper(directionLightRef, THREE.DirectionalLightHelper,0.5, "black")
+  const { lightColor } = useControls({
+    lightColor: "white",
+  })
+  return(
+    <>
+      <directionalLight 
+      position={[0,0,2]}
+      intensity={0.5}
+      // @ts-expect-error
 
-  return (
-     <Canvas>
-       <directionalLight position={[0,0,2]}/>
-       <ambientLight intensity={0-1} />
+      ref={directionLightRef}
+      color={lightColor}
+      />
+      <ambientLight intensity={0-1} />
        {/* <group position={[0, 1, 2]}>
           <Cube position={[1,0,0]} color='green' size={[1,1,1]}/>
           <Cube position={[-1,0,0]} color='hotpink' size={[1,1,1]}/>
@@ -94,8 +115,18 @@ function App() {
        </group> */}
       {/* <Cube position={[0,0,0]} color='orange' size={[1,1,1]}  /> */}
       <Sphere position={[0, 0, 0]} size={[1, 30, 30]}/>
+      <OrbitControls/>
       {/* <Torus position={[2, 0, 0]} size={[0.8, 0.1, 30, 30]} color={"blue"}/>
       <TorusKnot position={[-2, 0, 0]} size={[0.5, 0.1, 1000, 50]} color={"yellow"}/> */}
+    </>
+  )
+}
+
+function App() {
+
+  return (
+     <Canvas>
+        <Scene/>
      </Canvas>
     
   )
